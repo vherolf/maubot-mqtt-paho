@@ -1,1 +1,1 @@
-from .mqtt import MqttBot
+from .bot import MqttBot

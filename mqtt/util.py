@@ -24,7 +24,7 @@ from maubot.handlers.command import Argument
 import paho.mqtt.client as mqtt
 
 if TYPE_CHECKING:
-    from .mqtt import MqttBot
+    from .bot import MqttBot
 
 class Config(BaseProxyConfig):
     def do_update(self, helper: ConfigUpdateHelper) -> None:

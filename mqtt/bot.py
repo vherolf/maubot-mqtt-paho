@@ -17,7 +17,7 @@
 from typing import Optional, Tuple, Type, Dict
 
 from mautrix.util.config import BaseProxyConfig
-from mautrix.types import RoomID, EventType, MessageType
+from mautrix.types import RoomID, EventType, MessageType, GenericEvent
 from maubot import Plugin, MessageEvent
 from maubot.handlers import command, event
 
@@ -45,5 +45,29 @@ class MqttBot(Plugin):
         if not message:
             await evt.reply("Usage: !mqtt [channel] [text to send]")
             return
-        self.client.publish("test", message)
-        await evt.reply(f"sent to test: {message}")
+        channel = "light"
+        self.client.publish(channel, message)
+        await evt.respond(f"sent to light")
+
+    @command.new("dim")
+    @command.argument("step", pass_raw=True, required=False)
+    async def dim_handler(self, evt: MessageEvent, step: str) -> None:
+        if not step:
+            step = "10"
+        channel = "light"
+        self.client.publish(channel, step)
+        await evt.respond(f"dimming lights")
+
+    @command.passive(regex=r"^(?i)on$")
+    async def light_on(self, evt: GenericEvent, _: Tuple[str]) -> None:
+        channel = "light"
+        message = "on"
+        self.client.publish(channel, message)
+        await evt.respond( "AND THERE WILL BE LIGHT ... " )
+
+    @command.passive(regex=r"^(?i)off$")
+    async def light_off(self, evt: GenericEvent, _: Tuple[str]) -> None:
+        channel = "light"
+        message = "off"
+        self.client.publish(channel, message)
+        await evt.respond( "Light off" )
