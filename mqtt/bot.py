@@ -63,14 +63,14 @@ class MqttBot(Plugin):
         self.client.publish(channel, step)
         await evt.respond(f"dimming lights")
 
-    @command.passive(regex=r"^(?i)on$")
+    @command.passive(regex=r"^(?i)on|--- -\.$")
     async def light_on(self, evt: GenericEvent, _: Tuple[str]) -> None:
         channel = "light"
         message = "on"
         self.client.publish(channel, message)
         await evt.respond( "AND THERE WILL BE LIGHT ... " )
 
-    @command.passive(regex=r"^(?i)off$")
+    @command.passive(regex=r"^(?i)off|--- \.\.-\. \.\.-\.$")
     async def light_off(self, evt: GenericEvent, _: Tuple[str]) -> None:
         channel = "light"
         message = "off"
