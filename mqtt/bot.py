@@ -23,7 +23,6 @@ from maubot.handlers import command, event
 
 from .util import Config
 
-
 class MqttBot(Plugin):
     config: Config
 
@@ -39,15 +38,21 @@ class MqttBot(Plugin):
     def get_config_class(cls) -> Type['BaseProxyConfig']:
         return Config
 
+    async def stop(self) -> None:
+        await super().stop()
+        self.client.disconnect()
+
     @command.new("mqtt", aliases=["mq"])
-    @command.argument("message", pass_raw=True, required=False)
-    async def command_handler(self, evt: MessageEvent, message: str) -> None:
+    @command.argument("channel", required=False)
+    @command.argument("message", pass_raw=True, required=True)
+    async def command_handler(self, evt: MessageEvent,channel:Optional[str], message: str) -> None:
         if not message:
             await evt.reply("Usage: !mqtt [channel] [text to send]")
             return
-        channel = "light"
+        if not channel:
+            channel = "generic"
         self.client.publish(channel, message)
-        await evt.respond(f"sent to light")
+        await evt.respond(f"sent channel {channel} the message {message}")
 
     @command.new("dim")
     @command.argument("step", pass_raw=True, required=False)
