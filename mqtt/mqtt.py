@@ -23,35 +23,27 @@ from maubot.handlers import command, event
 
 from .util import Config
 
-class mqtt(Plugin):
+
+class MqttBot(Plugin):
     config: Config
 
     async def start(self) -> None:
         await super().start()
         self.on_external_config_update()
+        self.client = self.config.connect_mqtt()
 
     def on_external_config_update(self) -> None:
         self.config.load_and_update()
-        self.mqtt_server = self.config.load_mqtt_server()
 
     @classmethod
     def get_config_class(cls) -> Type['BaseProxyConfig']:
         return Config
 
-    @event.on(EventType.ROOM_MESSAGE)
-    async def event_handler(self, evt: MessageEvent) -> None:
-        if (evt.content.msgtype == MessageType.NOTICE 
-                        or evt.sender == self.client.mxid):
-            return
-        result = await evt.content.body
-        await evt.respond(f"[{evt.sender}](https://matrix.to/#/{evt.sender}) said "
-                          f"{result.text}")
-
     @command.new("mqtt", aliases=["mq"])
-    @command.argument("text", pass_raw=True, required=False)
-    async def command_handler(self, evt: MessageEvent, language: Optional[Tuple[str, str]],
-                              text: str) -> None:
-        if not text:
-            await evt.reply("Usage: !translate [from] <to> [text or reply to message]")
+    @command.argument("message", pass_raw=True, required=False)
+    async def command_handler(self, evt: MessageEvent, message: str) -> None:
+        if not message:
+            await evt.reply("Usage: !mqtt [channel] [text to send]")
             return
-        await evt.reply(text)
+        self.client.publish("test", message)
+        await evt.reply(f"sent to test: {message}")

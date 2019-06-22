@@ -25,7 +25,7 @@ modules:
 # If `module` is omitted, will default to last module specified in the module list.
 # Even if `module` is not omitted here, it must be included in the modules list.
 # The main class must extend maubot.Plugin
-main_class: mqtt
+main_class: MqttBot
 
 # Whether or not instances need a database
 database: false

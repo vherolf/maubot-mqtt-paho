@@ -20,12 +20,23 @@ from mautrix.util.config import BaseProxyConfig, ConfigUpdateHelper
 from mautrix.types import RoomID
 from maubot import MessageEvent
 from maubot.handlers.command import Argument
+        
+import paho.mqtt.client as mqtt
 
 if TYPE_CHECKING:
-    from .bot import TranslatorBot
+    from .mqtt import MqttBot
 
 class Config(BaseProxyConfig):
     def do_update(self, helper: ConfigUpdateHelper) -> None:
         helper.copy("mqttserver.hostname")
         helper.copy("mqttserver.port")
-        
+
+    def on_connect(self, client, userdata, flags, rc):
+        print("Connected with result code " + str(rc))
+
+    def connect_mqtt(self):
+        client = mqtt.Client()
+        client.on_connect = self.on_connect
+        client.connect("localhost", 1883, 60)
+        client.loop_start()
+        return client
