@@ -1,2 +1,2 @@
 # mqtt
-A mqtt client Maubot plugin
+A [maubot](https://github.com/maubot/maubot) to send and receive mqtt messages.

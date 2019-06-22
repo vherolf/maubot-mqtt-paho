@@ -1,0 +1,6 @@
+# MQTT Server settings
+mqttserver:
+  hostname: localhost
+  port: 8123
+# Whether bot responses should use Matrix replies.
+response_reply: true
