@@ -1,8 +1,14 @@
 # mqtt
 A [maubot](https://github.com/maubot/maubot) to send and receive mqtt messages.
 
+## install python mqtt client library
 
-## Install Mosquitto Broker
+In our virtualenv
+```
+pip install paho-mqtt
+```
+
+## Install Mosquitto Broker 
 
 ```
 sudo apt-get update
