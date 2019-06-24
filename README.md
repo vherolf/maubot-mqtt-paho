@@ -14,3 +14,15 @@ pip install paho-mqtt
 sudo apt-get update
 sudo apt-get install mosquitto mosquitto-clients
 ```
+
+## testing and usage
+
+fire up a termnial and subscribe to the info channel
+```
+mosquito_sub -h localhost -t info
+```
+
+type in your caht window
+```
+!pub info Hello World
+```

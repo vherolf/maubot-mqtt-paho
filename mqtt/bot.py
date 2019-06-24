@@ -16,7 +16,7 @@
 from typing import Optional, Tuple, Type, Dict
 
 from mautrix.util.config import BaseProxyConfig
-from mautrix.types import RoomID, EventType, MessageType, GenericEvent
+from mautrix.types import RoomID, EventType, MessageType, GenericEvent, TextMessageEventContent, Format
 from maubot import Plugin, MessageEvent
 from maubot.handlers import command, event
 
@@ -29,9 +29,8 @@ class MqttBot(Plugin):
 
     async def start(self) -> None:
         await super().start()
-        print("------------------",type(self), dir(self))
         self.on_external_config_update()
-        self.client = self.config.connect_mqtt()
+        self.mqttclient = self.config.connect_mqtt()
 
     def on_external_config_update(self) -> None:
         self.config.load_and_update()
@@ -42,13 +41,17 @@ class MqttBot(Plugin):
 
     async def stop(self) -> None:
         await super().stop()
-        self.client.disconnect()
-        self.client.loop_stop()
+        self.mqttclient.disconnect()
+        self.mqttclient.loop_stop()
 
     def on_message(self,client, userdata, message):
-        evt = MessageEvent()
+        text = str(message.payload.decode("utf-8"))
+        content = TextMessageEventContent(
+                    msgtype=MessageType.TEXT, body=f" {text} ", 
+                    format=Format.HTML,
+                    formatted_body=f"{text}")   
         print("received message =",str(message.payload.decode("utf-8")))
-        evt.respond( str( message.payload.decode("utf-8") ) )
+        self.client.send_message(self.room_id, content)
 
     @command.new("publish", aliases=["pub"])
     @command.argument("channel", required=True)
@@ -57,8 +60,7 @@ class MqttBot(Plugin):
         if not message:
             await evt.reply("Usage: !publish [channel] [text to send]")
             return
-        self.client.publish(channel, message)
-        print(dir(evt))    
+        self.mqttclient.publish(channel, message)
         await evt.respond(f"sent channel {channel} the message {message}")
 
     @command.new("subscribe", aliases=["sub"])
@@ -68,8 +70,9 @@ class MqttBot(Plugin):
         if not channel:
             await evt.reply("Usage: !subscribe [channel]")
             return
-        self.client.subscribe(channel)
-        self.client.message_callback_add(channel, self.on_message)
+        self.room_id = evt.room_id
+        self.mqttclient.subscribe(channel,1)
+        self.mqttclient.message_callback_add(channel, self.on_message)
         await evt.respond(f"subscribe channel {channel}")
 
 
@@ -77,12 +80,12 @@ class MqttBot(Plugin):
     async def event_on(self, evt: GenericEvent, _: Tuple[str]) -> None:
         channel = config["event_on"]["channel"]
         channel = config["event_on"]["message"]
-        self.client.publish(channel, message)
+        self.mqttclient.publish(channel, message)
         await evt.respond( "switched on" )
 
     @command.passive(regex=r"^(?i)off|--- \.\.-\. \.\.-\.$")
     async def event_off(self, evt: GenericEvent, _: Tuple[str]) -> None:
         channel = config["event_off"]["channel"]
         channel = config["event_off"]["message"]
-        self.client.publish(channel, message)
+        self.mqttclient.publish(channel, message)
         await evt.respond( "switched off" )

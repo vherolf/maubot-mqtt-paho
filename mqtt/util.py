@@ -34,8 +34,8 @@ class Config(BaseProxyConfig):
         print("Connected with result code " + str(rc))
 
     def connect_mqtt(self):
-        client = mqtt.Client()
-        client.on_connect = self.on_connect
-        client.connect(self['mqttserver']['hostname'],self['mqttserver']['port'], 60)
-        client.loop_start()
-        return client
+        mqttclient = mqtt.Client()
+        mqttclient.on_connect = self.on_connect
+        mqttclient.connect(self['mqttserver']['hostname'],self['mqttserver']['port'], 60)
+        mqttclient.loop_start()
+        return mqttclient
