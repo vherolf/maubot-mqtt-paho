@@ -13,7 +13,6 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 from typing import Optional, Tuple, Type, Dict
 
 from mautrix.util.config import BaseProxyConfig
@@ -23,11 +22,14 @@ from maubot.handlers import command, event
 
 from .util import Config
 
+import paho.mqtt.client as mqtt
+
 class MqttBot(Plugin):
     config: Config
 
     async def start(self) -> None:
         await super().start()
+        print("------------------",type(self), dir(self))
         self.on_external_config_update()
         self.client = self.config.connect_mqtt()
 
@@ -41,38 +43,46 @@ class MqttBot(Plugin):
     async def stop(self) -> None:
         await super().stop()
         self.client.disconnect()
+        self.client.loop_stop()
 
-    @command.new("mqtt", aliases=["mq"])
-    @command.argument("channel", required=False)
+    def on_message(self,client, userdata, message):
+        evt = MessageEvent()
+        print("received message =",str(message.payload.decode("utf-8")))
+        evt.respond( str( message.payload.decode("utf-8") ) )
+
+    @command.new("publish", aliases=["pub"])
+    @command.argument("channel", required=True)
     @command.argument("message", pass_raw=True, required=True)
-    async def command_handler(self, evt: MessageEvent,channel:Optional[str], message: str) -> None:
+    async def pub_handler(self, evt: MessageEvent, channel:str, message: str) -> None:
         if not message:
-            await evt.reply("Usage: !mqtt [channel] [text to send]")
+            await evt.reply("Usage: !publish [channel] [text to send]")
             return
-        if not channel:
-            channel = "generic"
         self.client.publish(channel, message)
+        print(dir(evt))    
         await evt.respond(f"sent channel {channel} the message {message}")
 
-    @command.new("dim")
-    @command.argument("step", pass_raw=True, required=False)
-    async def dim_handler(self, evt: MessageEvent, step: str) -> None:
-        if not step:
-            step = "10"
-        channel = "light"
-        self.client.publish(channel, step)
-        await evt.respond(f"dimming lights")
+    @command.new("subscribe", aliases=["sub"])
+    @command.argument("channel", required=False)
+    @command.argument("unsubscribe", required=False)
+    async def sub_handler(self, evt: MessageEvent, channel:Optional[str], unsubscribe: Optional[str]) -> None:
+        if not channel:
+            await evt.reply("Usage: !subscribe [channel]")
+            return
+        self.client.subscribe(channel)
+        self.client.message_callback_add(channel, self.on_message)
+        await evt.respond(f"subscribe channel {channel}")
+
 
     @command.passive(regex=r"^(?i)on|--- -\.$")
-    async def light_on(self, evt: GenericEvent, _: Tuple[str]) -> None:
-        channel = "light"
-        message = "on"
+    async def event_on(self, evt: GenericEvent, _: Tuple[str]) -> None:
+        channel = config["event_on"]["channel"]
+        channel = config["event_on"]["message"]
         self.client.publish(channel, message)
-        await evt.respond( "AND THERE WILL BE LIGHT ... " )
+        await evt.respond( "switched on" )
 
     @command.passive(regex=r"^(?i)off|--- \.\.-\. \.\.-\.$")
-    async def light_off(self, evt: GenericEvent, _: Tuple[str]) -> None:
-        channel = "light"
-        message = "off"
+    async def event_off(self, evt: GenericEvent, _: Tuple[str]) -> None:
+        channel = config["event_off"]["channel"]
+        channel = config["event_off"]["message"]
         self.client.publish(channel, message)
-        await evt.respond( "Light off" )
+        await evt.respond( "switched off" )

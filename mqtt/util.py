@@ -28,8 +28,7 @@ if TYPE_CHECKING:
 
 class Config(BaseProxyConfig):
     def do_update(self, helper: ConfigUpdateHelper) -> None:
-        helper.copy("mqttserver.hostname")
-        helper.copy("mqttserver.port")
+        helper.copy("mqttserver")
 
     def on_connect(self, client, userdata, flags, rc):
         print("Connected with result code " + str(rc))
@@ -37,6 +36,6 @@ class Config(BaseProxyConfig):
     def connect_mqtt(self):
         client = mqtt.Client()
         client.on_connect = self.on_connect
-        client.connect("localhost", 1883, 60)
+        client.connect(self['mqttserver']['hostname'],self['mqttserver']['port'], 60)
         client.loop_start()
         return client

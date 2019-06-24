@@ -1,6 +1,13 @@
 # MQTT Server settings
 mqttserver:
   hostname: localhost
-  port: 8123
-# Whether bot responses should use Matrix replies.
-response_reply: true
+  port: 1883
+  default_channel: info
+
+# for passive command on/off
+event_on:
+  channel: /info/on
+  message: on
+event_off:
+  channel: /info/off
+  message: off
