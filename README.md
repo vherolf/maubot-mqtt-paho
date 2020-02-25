@@ -1,4 +1,4 @@
-# mqtt
+# maubot mqtt bot with paho
 A [maubot](https://github.com/maubot/maubot) plugin to publish/subscribe mqtt messages to a MQTT broker.
 
 ## install python mqtt client library
